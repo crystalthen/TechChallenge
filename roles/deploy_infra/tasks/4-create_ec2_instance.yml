@@ -1,0 +1,35 @@
+---
+
+- name: Create an EC2 instance
+  amazon.aws.ec2:
+    instance_type: t2.micro
+    image: ami-0f96495a064477ffb  # EC2 Linux AMI for ap-southeast-2
+    key_name: "{{ app_name }}-key"
+    region: "{{ aws_region }}"
+    vpc_subnet_id: "{{ vpc_subnets | map(attribute='subnet.id') | first }}"
+    instance_tags:
+      Name: "{{ app_name }}"
+      Creator: Ansible
+      OS: Linux
+    group:
+      - webservers
+      - "{{ app_name }}_app_deployment"
+    assign_public_ip: yes
+    wait: yes
+    state: present
+  register: ec2
+
+- name: print ec2 result
+  debug: msg={{ item }}
+  loop: "{{ ec2.instances }}"
+
+- name: Add host to ansible hosts
+  lineinfile:
+    
+
+- name: Wait for SSH to come up before proceeding
+  wait_for: 
+    host: "{{ item.public_ip }}"
+    port: 22 
+    state: started
+  loop: "{{ ec2.instances }}"
