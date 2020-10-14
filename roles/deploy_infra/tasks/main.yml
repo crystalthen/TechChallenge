@@ -12,8 +12,8 @@
   - name: Create SSH key
     include_tasks: 2-create_key.yml
 
-  # - name: Create RDS instance
-  #   include_tasks: 3-create_rds_instance.yml
+  - name: Create RDS instance
+    include_tasks: 3-create_rds_instance.yml
 
   - name: Create EC2 instance
     include_tasks: 4-create_ec2_instance.yml
