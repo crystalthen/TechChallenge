@@ -1,7 +1,0 @@
----
-
-# - name: Lock down security group to web traffic only
-
-# - name: Create load balancer
-
-# - name: Done? Output message on how to access
