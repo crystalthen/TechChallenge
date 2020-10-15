@@ -1,0 +1,33 @@
+---
+
+# Task list to wait for the EC2 and RDS instances to be ready before proceeding
+
+- name: Wait for SSH to EC2 instance to come up
+  wait_for: 
+    host: "{{ item.public_ip }}"
+    port: 22 
+    state: started
+  loop: "{{ ec2.instances }}"
+
+- name: Extract EC2 instance public IP
+  set_fact:
+    ec2_public_ip: "{{ ec2.instances[0].public_ip }}"
+
+- name: Wait for RDS instance to come up (this could take a while)
+  async_status:
+    jid: "{{ rds_job.ansible_job_id }}"
+  register: rds_deployment
+  until: rds_deployment.finished
+  retries: 500
+
+# There are community modules for this, but from testing they are unreliable
+# So I'm using aws cli
+- name: Get RDS instance details
+  shell: |
+    aws rds describe-db-instances \
+    --db-instance-identifier {{ app_name }}_db
+  register: rds_cmd
+
+- name: Extract RDS instance JSON
+  set_fact:
+    rds: "{{ rds_cmd.stdout }}"
