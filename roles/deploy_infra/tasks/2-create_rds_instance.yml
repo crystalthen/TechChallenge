@@ -1,0 +1,29 @@
+---
+
+- name: Create a DB subnet group
+  community.aws.rds_subnet_group:
+    name: "{{ app_name }}_db_subnet_group"
+    description: DB subnet group for ToDo App database
+    subnets: "{{ vpc_subnets | map(attribute='subnet.id') | list }}"
+    region: "{{ aws_region }}"
+    state: present
+
+- name: Create PostgreSQL RDS instance
+  community.aws.rds:
+    command: create
+    instance_name: "{{ app_name }}-db"
+    db_engine: postgres
+    instance_type: db.t2.micro
+    size: "20"  # Minimum for postgres
+    username: "{{ psql_user }}"
+    password: "{{ psql_pass }}"
+    vpc_security_groups: "{{ dbserver_sg.group_id }}"
+    subnet: "{{ app_name }}_db_subnet_group"
+    publicly_accessible: yes
+    region: "{{ aws_region }}"
+    multi_zone: yes
+    wait: yes
+    wait_timeout: 1200  # Wait up to 20 minutes
+  async: 1200
+  poll: 0  # Move on to next task, we will come back and grab the dns name once it's up
+  register: rds_job
