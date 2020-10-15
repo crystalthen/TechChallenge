@@ -1,7 +1,7 @@
 ---
 
 # - name: Validate variables provided (in group_vars\all)
-# amazon.aws.aws_az_info
+# ^^ Would implement this if I had more time
 
 - name: Deployment block
   block:
@@ -18,8 +18,8 @@
   - name: Create EC2 instance
     include_tasks: 4-create_ec2_instance.yml
 
-  - name: Wait for deployments before proceeding
-    include_tasks: 5-wrap_up_tasks.yml
+  - name: Wait for instances to be ready before proceeding
+    include_tasks: 5-wait_for_instances.yml
 
   environment:
     AWS_ACCESS_KEY_ID: "{{ access_key_id }}"

@@ -1,0 +1,21 @@
+---
+
+- name: Create working dir
+  file:
+    path: /work
+    state: directory
+
+- name: Yum update
+  yum:
+    name: "*"
+    state: latest
+
+- name: Create app user group
+  group:
+    name: "{{ app_name }}"
+
+- name: Create app user
+  user:
+    name: "{{ app_name }}"
+    group: "{{ app_name }}"
+    shell: /usr/sbin/nologin

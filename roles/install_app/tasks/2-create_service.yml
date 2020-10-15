@@ -1,0 +1,49 @@
+---
+
+# We will be running the binary under systemd
+# Download the release binary for Linux from github
+
+- name: Get latest release info from servian/TechChallengeApp
+  uri:
+    url: "https://api.github.com/repos/servian/TechChallengeAPp/releases/latest"
+    method: GET
+    headers:
+      Accept: "application/vnd.github.v3+json"
+  register: releases
+
+- name: Extract URL from latest release information
+  set_fact:
+    release_download_url: "{{ (releases.json.assets | selectattr('name', 'search', 'linux64') | first).browser_download_url }}"
+
+- name: Download and unarchive latest release
+  unarchive:
+    src: "{{ release_download_url }}"
+    dest: /usr/sbin
+    remote_src: yes
+
+- name: Rename the resulting folder
+  command: mv /usr/sbin/dist /usr/sbin/{{ app_name }}
+
+# Prep the database
+- name: Prepare the postgres database
+  command: /usr/sbin/{{ app_name }}/TechChallengeApp updatedb -s
+
+# Create the service
+- name: Generate conf.toml file (overwrite existing)
+  copy:
+    content: "{{ lookup('template', 'conf.toml.j2') }}"
+    dest: "/usr/sbin/{{ app_name }}/conf.toml"
+    owner: "{{ app_name }}"
+    group: "{{ app_name }}"
+    force: yes
+
+- name: Create todoapp service
+  copy:
+    content: "{{ lookup('template', 'todoapp.service.j2') }}"
+    dest: "/etc/systemd/system/{{ app_name }}.service"
+
+- name: Start todoapp service
+  service:
+    name: "{{ app_name }}"
+    enabled: yes  # Start on boot
+    state: started
