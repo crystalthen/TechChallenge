@@ -9,14 +9,17 @@
   - name: Set up AWS environment
     include_tasks: 1-setup_environment.yml
 
-  - name: Create SSH key
-    include_tasks: 2-create_key.yml
-
   - name: Create RDS instance
-    include_tasks: 3-create_rds_instance.yml
+    include_tasks: 2-create_rds_instance.yml
+
+  - name: Create SSH key
+    include_tasks: 3-create_key.yml
 
   - name: Create EC2 instance
     include_tasks: 4-create_ec2_instance.yml
+
+  - name: Wait for deployments before proceeding
+    include_tasks: 5-wrap_up_tasks.yml
 
   environment:
     AWS_ACCESS_KEY_ID: "{{ access_key_id }}"
