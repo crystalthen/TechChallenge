@@ -29,7 +29,7 @@
     state: directory
     mode: 0755
 
-- name: Create /etc/ansible directory
+- name: Create ansible hosts file
   file:
     path: /etc/ansible/hosts
     state: touch
@@ -45,15 +45,9 @@
       localhost
       [todoapp]
       {{ item.public_ip }} ansible_ssh_user=ec2-user ansible_ssh_private_key_file={{ ec2_key }}
+
     state: present
   loop: "{{ ec2.instances }}"
 
 - name: Reload hosts file
   meta: refresh_inventory
-
-- name: Wait for SSH to come up before proceeding
-  wait_for: 
-    host: "{{ item.public_ip }}"
-    port: 22 
-    state: started
-  loop: "{{ ec2.instances }}"
