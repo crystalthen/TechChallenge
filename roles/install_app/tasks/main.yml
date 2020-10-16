@@ -1,47 +1,12 @@
 ---
 
-- name: Yum update
-  yum:
-    name: "*"
-    state: latest
+# Runs on EC2 instance (created by deploy_infra role)
 
-- name: Install Docker & git
-  yum:
-    name:
-      - docker
-      - git
-    state: present
+- name: App installation
+  block:
 
-- name: Set docker to start on boot
-  service:
-    name: docker
-    enabled: yes
-    state: started
+  - name: Prepare the EC2 instance
+    include_tasks: 1-prepare_server.yml
 
-- name: Create working dir
-  file:
-    path: "{{ ec2_working_dir }}"
-    state: directory
-
-- name: Clone TechChallengeApp repo
-  git:
-    repo: https:////github.com/crystalthen/TechChallengeApp
-    dest: "{{ ec2_working_dir }}"
-
-- name: Generate conf.toml file
-  lineinfile:
-    dest: "{{ ec2_working_dir}}/TechChallengeApp/conf.toml"
-    line: "{{ lookup('template', 'conf.toml.j2') }}"
-    state: present
-
-- name: Docker build the app (this might take a while)
-  shell:
-    cmd: docker build . -t servian/techchallengeapp:latest
-
-- name: Configure the app's database
-  shell:
-    cmd: docker run servian/techchallengeapp updatedb -s
-
-- name: Start the app
-  shell:
-    cmd: docker run servian/techchallengeapp serve
+  - name: Create the app service
+    include_tasks: 2-create_service.yml
