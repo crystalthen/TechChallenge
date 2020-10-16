@@ -1,13 +1,16 @@
 ---
 
+# Runs on localhost
+
 # - name: Validate variables provided (in group_vars\all)
+# - name: Check that AWS key env variables exist
 # ^^ Would implement this if I had more time
 
 - name: Deployment block
   block:
 
   - name: Set up AWS environment
-    include_tasks: 1-setup_environment.yml
+    include_tasks: 1-create_vpc.yml
 
   - name: Create RDS instance
     include_tasks: 2-create_rds_instance.yml
@@ -18,8 +21,11 @@
   - name: Create EC2 instance
     include_tasks: 4-create_ec2_instance.yml
 
+  - name: Create ELB load balancer
+    include_tasks: 5-create_load_balancer.yml
+
   - name: Wait for instances to be ready before proceeding
-    include_tasks: 5-wait_for_instances.yml
+    include_tasks: 6-wait_for_instances.yml
 
   environment:
     AWS_ACCESS_KEY_ID: "{{ access_key_id }}"
