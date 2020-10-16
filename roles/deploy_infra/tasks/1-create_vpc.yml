@@ -2,94 +2,110 @@
 
 # Task block to create VPC and IGW
 
-- name: Set up VPC
-  block:
-  - name: Create a VPC
-    amazon.aws.ec2_vpc_net:
-      name: "{{ app_name }}_vpc"
-      region: "{{ aws_region }}"
-      cidr_block: "{{ cidr_block }}"
-      tags:
-        purpose: techchallenge
-      state: present
-    register: vpc
+- name: Create a VPC
+  amazon.aws.ec2_vpc_net:
+    name: "{{ app_name }}_vpc"
+    region: "{{ aws_region }}"
+    cidr_block: "{{ cidr_block }}"
+    tags:
+      purpose: techchallenge
+    state: present
+  register: vpc
 
-  - name: Create VPC subnets in two availability zones
-    amazon.aws.ec2_vpc_subnet:
-      region: "{{ aws_region }}"
-      az: "{{ item.az }}"
-      vpc_id: "{{ vpc.vpc.id }}"
-      cidr: "{{ item.cidr }}"
-      tags: 
-        purpose: techchallenge
-      state: present
-    loop: "{{ aws_availability_zones }}"
-    register: vpc_subnets
+- name: Create VPC subnets in two availability zones
+  amazon.aws.ec2_vpc_subnet:
+    region: "{{ aws_region }}"
+    az: "{{ item.az }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    cidr: "{{ item.cidr }}"
+    tags:
+      purpose: techchallenge
+    state: present
+  loop: "{{ aws_availability_zones }}"
+  register: vpc_subnets
 
-  - name: Save VPC subnet ID for later use
-    set_fact:
-      vpc_subnets: "{{ vpc_subnets.results }}"
+- name: Save VPC subnet ID for later use
+  set_fact:
+    vpc_subnets: "{{ vpc_subnets.results }}"
 
-  - name: Create VPC internet gateway
-    community.aws.ec2_vpc_igw:
-      vpc_id: "{{ vpc.vpc.id }}"
-      region: "{{ aws_region }}"
-    register: igw
+- name: Create VPC internet gateway
+  community.aws.ec2_vpc_igw:
+    vpc_id: "{{ vpc.vpc.id }}"
+    region: "{{ aws_region }}"
+  register: igw
 
-  - name: Extract VPC route table ID
-    community.aws.ec2_vpc_route_table_info:
-      region: "{{ aws_region }}"
-      filters:
-        vpc-id: "{{ vpc.vpc.id }}"
-    register: route_tables
+- name: Extract VPC route table ID
+  community.aws.ec2_vpc_route_table_info:
+    region: "{{ aws_region }}"
+    filters:
+      vpc-id: "{{ vpc.vpc.id }}"
+  register: route_tables
 
-  - name: Extract VPC route table ID
-    set_fact:
-      vpc_rt_id: "{{ route_tables.route_tables[0].id }}"
+- name: Extract VPC route table ID
+  set_fact:
+    vpc_rt_id: "{{ route_tables.route_tables[0].id }}"
 
-  - name: debug
-    debug: msg={{ vpc_rt_id }}
-
-  - name: Add inbound route to VPC route table
-    community.aws.ec2_vpc_route_table:
-      lookup: id
-      vpc_id: "{{ vpc.vpc.id }}"
-      route_table_id: "{{ vpc_rt_id }}"
-      region: "{{ aws_region }}"
-      tags:
-        Name: public
-      routes:
-        - dest: 0.0.0.0/0
-          gateway_id: "{{ igw.gateway_id }}"
+- name: Add inbound route to VPC route table
+  community.aws.ec2_vpc_route_table:
+    lookup: id
+    vpc_id: "{{ vpc.vpc.id }}"
+    route_table_id: "{{ vpc_rt_id }}"
+    region: "{{ aws_region }}"
+    tags:
+      Name: public
+    routes:
+      - dest: 0.0.0.0/0
+        gateway_id: "{{ igw.gateway_id }}"
 
 # Task block to create security groups
 
-  - name: Create webservers security group
-    amazon.aws.ec2_group:
-      name: webservers
-      description: Allow inbound web traffic to webservers
-      region: "{{ aws_region }}"
-      vpc_id: "{{ vpc.vpc.id }}"
-      rules:
-        - proto: tcp
-          cidr_ip: 0.0.0.0/0
-          ports:
-            - 80
-            - 443
-        - proto: tcp
-          cidr_ip: 0.0.0.0/0
-          ports: 22
-      state: present
+- name: Create web inbound security group
+  amazon.aws.ec2_group:
+    name: web_inbound
+    description: Allow inbound web traffic to load balancer
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    rules:
+      - rule_desc: Allow HTTP/HTTPS inbound
+        proto: tcp
+        cidr_ip: 0.0.0.0/0
+        ports:
+          - 80
+          - 443
+    rules_egress:
+      - rule_desc: Allow tcp3000 from web_inbound group
+        proto: tcp
+        group_name: app_internal
+        group_desc: Allow traffic from load balancer to app server  # Task will fail without this
+        ports: 3000
+    state: present
 
-  - name: Create dbservers security group
-    amazon.aws.ec2_group:
-      name: dbservers
-      description: Allow traffic from webservers to dbservers
-      region: "{{ aws_region }}"
-      vpc_id: "{{ vpc.vpc.id }}"
-      rules:
-        - proto: tcp
-          group_name: webservers
-          ports: 5432
-      state: present
-    register: dbserver_sg
+- name: Create app internal security group
+  amazon.aws.ec2_group:
+    name: app_internal
+    description: Allow traffic from load balancer to app server
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    rules:
+      - rule_desc: Allow all traffic from web_inbound group
+        proto: tcp
+        group_name: web_inbound
+        ports: 3000
+      - rule_desc: Allow SSH (temp for deployment)
+        proto: tcp
+        cidr_ip: 0.0.0.0/0
+        ports: 22
+    state: present
+
+- name: Create dbservers security group
+  amazon.aws.ec2_group:
+    name: dbservers
+    description: Allow traffic from webservers to dbservers
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    rules:
+      - proto: tcp
+        group_name: app_internal
+        ports: 5432
+    state: present
+  register: dbserver_sg
