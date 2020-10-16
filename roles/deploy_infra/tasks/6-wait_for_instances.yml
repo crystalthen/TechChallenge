@@ -25,7 +25,8 @@
 - name: Get RDS instance details
   shell: |
     aws rds describe-db-instances \
-    --db-instance-identifier {{ app_name }}_db
+    --db-instance-identifier {{ app_name }}-rds \
+    --region {{ aws_region }}
   register: rds_cmd
 
 - name: Extract RDS instance JSON
