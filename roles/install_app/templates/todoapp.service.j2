@@ -1,10 +1,10 @@
-{{ app_name }}.service
 [Unit]
 Description=Servian To Do App
 [Service]
-User=todoapp
-WorkingDirectory=/home/todoapp/
-ExecStart=/usr/sbin/TechChallengeApp serve
+Type=simple
+User={{ app_name }}
+WorkingDirectory=/usr/sbin/{{ app_name }}
+ExecStart=/usr/sbin/{{ app_name }}/TechChallengeApp serve
 SuccessExitStatus=143
 TimeoutStopSec=10
 Restart=on-failure

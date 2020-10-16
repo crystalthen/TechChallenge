@@ -1,11 +1,11 @@
 ---
 
 # We will be running the binary under systemd
-# Download the release binary for Linux from github
 
+# Download the release binary for Linux from github
 - name: Get latest release info from servian/TechChallengeApp
   uri:
-    url: "https://api.github.com/repos/servian/TechChallengeAPp/releases/latest"
+    url: "https://api.github.com/repos/servian/TechChallengeApp/releases/latest"
     method: GET
     headers:
       Accept: "application/vnd.github.v3+json"
@@ -30,7 +30,7 @@
 - name: Generate conf.toml file (overwrite existing)
   copy:
     content: "{{ lookup('template', 'conf.toml.j2') }}"
-    dest: "/home/{{ app_name }}/conf.toml"
+    dest: "/usr/sbin/{{ app_name }}/conf.toml"
     owner: "{{ app_name }}"
     group: "{{ app_name }}"
 
@@ -40,7 +40,7 @@
   become: True
   become_user: "{{ app_name }}"
   args:
-    chdir: "/home/{{ app_name }}"
+    chdir: "/usr/sbin/{{ app_name }}"
 
 - name: Create todoapp service
   copy:
@@ -58,4 +58,3 @@
     name: "{{ app_name }}"
     enabled: True  # Start on boot
     state: started
-  become: True

@@ -20,8 +20,7 @@
   until: rds_deployment.finished
   retries: 500
 
-# There are community modules for this, but from testing they are unreliable
-# So I'm using aws cli
+# Using cli as the community module had a bug
 - name: Get RDS instance details
   shell: |
     aws rds describe-db-instances \

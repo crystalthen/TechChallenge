@@ -20,10 +20,10 @@
     password: "{{ psql_pass }}"
     vpc_security_groups: "{{ dbserver_sg.group_id }}"
     subnet: "{{ app_name }}_db_subnet_group"
-    publicly_accessible: yes
+    publicly_accessible: True
     region: "{{ aws_region }}"
-    multi_zone: yes
-    wait: yes
+    multi_zone: True
+    wait: True
     wait_timeout: 1200  # Wait up to 20 minutes
   async: 1200
   poll: 0  # Move on to next task, we will come back and grab the endpoint once it's up
