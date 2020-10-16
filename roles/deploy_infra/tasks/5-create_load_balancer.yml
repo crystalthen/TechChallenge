@@ -1,0 +1,26 @@
+---
+
+- name: Create a load balancer for the EC2 instance
+  amazon.aws.ec2_elb_lb:
+    name: "{{ app_name }}-elb"
+    scheme: internet-facing
+    region: "{{ aws_region }}"
+    subnets: "{{ vpc_subnets | map(attribute='subnet.id') | list }}"
+    instance_ids: "{{ item.id }}"
+    purge_instance_ids: False
+    listeners:
+      - protocol: http
+        load_balancer_port: 80
+        instance_port: 3000
+    health_check:
+      ping_protocol: http
+      ping_port: 3000
+      ping_path: "/"
+      response_timeout: 10
+      interval: 30
+      unhealthy_threshold: 2
+      healthy_threshold: 5
+    security_group_names: webservers
+    state: present
+  loop: "{{ ec2.instances }}"
+  register: elb
