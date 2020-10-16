@@ -1,24 +1,21 @@
 ---
 
 # Create an ec2 key to use with the ec2 instance
-# SSH will be briefly open to the world, so we don't want to use a password
+# This key is required to install the app on the server
+# After the app has been deployed, SSH will be closed to the outside world
 
 - name: Create an EC2 key
   amazon.aws.ec2_key:
     name: "{{ app_name }}-key"
     region: "{{ aws_region }}"
-    force: yes
+    force: True
   register: ec2_key
-  ignore_errors: true
+  ignore_errors: True
 
 - name: Save private key
   copy:
     content: "{{ ec2_key.key.private_key }}"
-    dest: "{{ ec2_key_path }}"
+    dest: "/work/ec2_key"
     mode: 0600
-  become: yes
-  ignore_errors: true
-
-- name: Print private key (for testing)
-  debug: msg={{ ec2_key.key.private_key }}
-  ignore_errors: true
+  become: True
+  ignore_errors: True
