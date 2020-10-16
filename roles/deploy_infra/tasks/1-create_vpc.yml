@@ -1,6 +1,7 @@
 ---
 
 # Task block to create VPC and IGW
+
 - name: Set up VPC
   block:
   - name: Create a VPC
@@ -62,19 +63,6 @@
           gateway_id: "{{ igw.gateway_id }}"
 
 # Task block to create security groups
-- name: Set up security groups
-  block:
-  - name: Create deployment security group  # Allow SSH inbound
-    amazon.aws.ec2_group:
-      name: "{{ app_name }}_app_deployment"
-      description: Temporary security group to allow app deployment
-      region: "{{ aws_region }}"
-      vpc_id: "{{ vpc.vpc.id }}"
-      rules:
-        - proto: tcp
-          cidr_ip: 0.0.0.0/0
-          ports: 22
-      state: present
 
   - name: Create webservers security group
     amazon.aws.ec2_group:
@@ -88,6 +76,9 @@
           ports:
             - 80
             - 443
+        - proto: tcp
+          cidr_ip: 0.0.0.0/0
+          ports: 22
       state: present
 
   - name: Create dbservers security group
