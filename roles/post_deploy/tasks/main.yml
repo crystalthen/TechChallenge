@@ -1,0 +1,39 @@
+---
+
+# To be run on localhost
+
+# Shut down SSH from the internet
+- name: Remove SSH from webservers security group
+  amazon.aws.ec2_group:
+    name: app_internal
+    description: Allow traffic from load balancer to app server
+    region: "{{ aws_region }}"
+    vpc_id: "{{ vpc.vpc.id }}"
+    rules:
+      - rule_desc: Allow tcp3000 from web_inbound group
+        proto: tcp
+        group_name: web_inbound
+        ports: 3000
+    purge_rules: True
+    state: present
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ access_key_id }}"
+    AWS_SECRET_ACCESS_KEY: "{{ secret_key }}"
+
+- name: Extract ELB URL from elb output
+  set_fact:
+    elb_address: "{{ elb.results[0].elb.dns_name }}"
+
+- name: Wait for application to become available
+  wait_for:
+    host: "{{ elb_address }}"
+    port: 80
+    state: started
+    timeout: 600
+
+- name: Output results
+  debug:
+    msg:
+      - "Deployment complete!"
+      - "Access the app at: {{ elb_address }}"
+      - "EC2 key location: ./ec2_key"
