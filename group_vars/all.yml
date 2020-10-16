@@ -1,0 +1,16 @@
+---
+
+app_name: todoapp  # Used to name things
+
+aws_region: ap-southeast-2
+cidr_block: 10.0.0.0/16
+aws_availability_zones:
+  - { az: ap-southeast-2a, cidr: 10.0.1.0/24 }
+  - { az: ap-southeast-2b, cidr: 10.0.2.0/24 }
+
+psql_user: "todoadm"
+psql_pass: "ih1wmp5f1"  # TO DO: generate password and pass it in to conf.toml using jinja2 templates
+
+# aws credentials
+access_key_id: XXXX
+secret_key: XXXX
