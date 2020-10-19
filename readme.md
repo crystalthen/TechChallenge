@@ -51,8 +51,9 @@ The playbook takes about 20 minutes to run.
 
 ## To-Do
 
-- Pass AWS credentials through to the container via environment variables
+- Create EC2 launch group and auto-scaling group
 - Update ELB from classic
+- Pass AWS credentials through to the container via environment variables
 
 ##  Lessons learned
 Given more time I would learn to deploy the AWS infra with a more specialised infra as code solution (e.g.: Terraform). Deploying with Ansible work fine, but it's a bit of a headache to set vars (for instance IDs, security group IDs, etc) and tearing down the stack afterwards is a manual process.
