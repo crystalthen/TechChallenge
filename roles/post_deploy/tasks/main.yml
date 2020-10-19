@@ -26,19 +26,12 @@
 
 - name: Wait for application to become available
   uri:
-    url: "{{ elb_address }}"
+    url: "http://{{ elb_address }}/healthcheck/"
     status_code: 200
   register: healthcheck
   until: healthcheck.status == 200
   retries: 20  # Wait up to 10 minutes
   delay: 30
-  
-  
-  wait_for:
-    host: "{{ elb_address }}"
-    port: 80
-    state: started
-    timeout: 600
 
 - name: Output results
   debug:
