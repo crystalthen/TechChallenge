@@ -15,7 +15,7 @@
     health_check:
       ping_protocol: http
       ping_port: 3000
-      ping_path: "/"
+      ping_path: "/healthcheck/"
       response_timeout: 10
       interval: 30
       unhealthy_threshold: 2
