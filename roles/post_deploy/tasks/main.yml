@@ -25,6 +25,15 @@
     elb_address: "{{ elb.results[0].elb.dns_name }}"
 
 - name: Wait for application to become available
+  uri:
+    url: "{{ elb_address }}"
+    status_code: 200
+  register: healthcheck
+  until: healthcheck.status == 200
+  retries: 20  # Wait up to 10 minutes
+  delay: 30
+  
+  
   wait_for:
     host: "{{ elb_address }}"
     port: 80
@@ -35,5 +44,5 @@
   debug:
     msg:
       - "Deployment complete!"
-      - "Access the app at: {{ elb_address }}"
+      - "Access the app at: http://{{ elb_address }}"
       - "EC2 key location: ./ec2_key"
