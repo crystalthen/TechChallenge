@@ -47,6 +47,14 @@ These components are created by an ansible playbook which runs in a docker conta
 
 The playbook takes about 20 minutes to run.
 
+### Clean up
+
+To remove all AWS components deployed by this playbook:
+
+1. Run the cleanup playbook
+
+        docker run -v "${PWD}":/work --rm techchallenge:latest ./cleanup.yml
+
 ---
 
 ## To-Do
