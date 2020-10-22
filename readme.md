@@ -28,12 +28,11 @@ These components are created by an ansible playbook which runs in a docker conta
 
 2. Build the docker image
 
-        docker build . -t techchallenge:latest
-
+        # cd TechChallenge/
+        # docker build . -t techchallenge:latest
 
 3. Add your AWS access key details to the `group_vars/all` file
 
-        # cd TechChallenge/
         # vim group_vars/all
 
     Edit the following lines:
